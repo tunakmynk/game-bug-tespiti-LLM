@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crimson Desert - QA Asistanı</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e2e; color: #cdd6f4; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+        .header { background-color: #11111b; padding: 20px; text-align: center; border-bottom: 1px solid #313244; }
+        .header h1 { margin: 0; color: #89b4fa; font-size: 24px; }
+        .chat-container { flex: 1; overflow-y: auto; padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; }
+        .message { margin-bottom: 20px; padding: 15px; border-radius: 8px; line-height: 1.5; }
+        .user-message { background-color: #313244; align-self: flex-end; border-left: 4px solid #89b4fa; }
+        .bot-message { background-color: #181825; border-left: 4px solid #a6e3a1; }
+        .input-area { background-color: #11111b; padding: 20px; display: flex; justify-content: center; border-top: 1px solid #313244; }
+        .input-box { display: flex; width: 100%; max-width: 800px; gap: 10px; }
+        input[type="text"] { flex: 1; padding: 15px; border: 1px solid #313244; border-radius: 8px; background-color: #1e1e2e; color: white; font-size: 16px; outline: none; }
+        input[type="text"]:focus { border-color: #89b4fa; }
+        button { padding: 15px 25px; background-color: #89b4fa; color: #11111b; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        button:hover { background-color: #74c7ec; }
+        .loading { display: none; color: #f9e2af; font-style: italic; margin-bottom: 10px; }
+        .details-box { background-color: #11111b; padding: 10px; border-radius: 5px; font-size: 12px; margin-top: 10px; color: #a6adc8; white-space: pre-wrap; font-family: monospace; display: none;}
+        .toggle-details { color: #89b4fa; cursor: pointer; font-size: 12px; text-decoration: underline; margin-top: 10px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>⚔️ Crimson Desert - Geliştirici QA Asistanı</h1>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="message bot-message">
+            <strong>🤖 Asistan:</strong> Merhaba! Ben doğrudan veritabanındaki oyuncu geri bildirimlerini analiz eden asistanınızım. Geliştirme ekibine nasıl yardımcı olabilirim?
+        </div>
+    </div>
+
+    <div class="input-area">
+        <div class="input-box">
+            <input type="text" id="userInput" placeholder="Yönetici sorusunu buraya yazın (Örn: İade edenler neyden şikayetçi?)..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Gönder</button>
+        </div>
+    </div>
+
+    <script>
+        // Markdown (Bold, madde işaretleri) formatını basit HTML'e çeviren fonksiyon
+        function formatMarkdown(text) {
+            let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/\*(.*?)\n/g, '<li>$1</li>');
+            formatted = formatted.replace(/\n/g, '<br>');
+            return formatted;
+        }
+
+        async function sendMessage() {
+            const inputField = document.getElementById('userInput');
+            const message = inputField.value.trim();
+            if (!message) return;
+
+            const chatContainer = document.getElementById('chatContainer');
+
+            // Kullanıcı mesajını ekrana ekle
+            chatContainer.innerHTML += `<div class="message user-message"><strong>🧑‍💻 Sen:</strong> ${message}</div>`;
+            inputField.value = '';
+            
+            // Yükleniyor ibaresi ekle
+            const loadingId = 'loading-' + Date.now();
+            chatContainer.innerHTML += `<div class="loading" id="${loadingId}">Asistan veritabanını analiz ediyor...</div>`;
+            document.getElementById(loadingId).style.display = 'block';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                // Flask Backend'e veriyi yolla
+                const response = await fetch('/api/soru-sor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ soru: message })
+                });
+                
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+
+                // Botun cevabını ve analiz detaylarını ekrana bas
+                const detayId = 'detay-' + Date.now();
+                const botHtml = `
+                    <div class="message bot-message">
+                        <strong>🤖 Asistan:</strong><br><br>
+                        ${formatMarkdown(data.cevap)}
+                        <br>
+                        <span class="toggle-details" onclick="document.getElementById('${detayId}').style.display = 'block'; this.style.display='none';">🔍 Arka Plan Detaylarını ve Kaynakları Gör</span>
+                        <div class="details-box" id="${detayId}">
+<b>Filtreler:</b> ${JSON.stringify(data.filtreler)}
+<b>Arama Terimi:</b> ${data.arama_metni}
+
+<b>Okunan Kaynaklar:</b>
+${data.kaynaklar}
+                        </div>
+                    </div>
+                `;
+                chatContainer.innerHTML += botHtml;
+
+            } catch (error) {
+                document.getElementById(loadingId).remove();
+                chatContainer.innerHTML += `<div class="message bot-message" style="border-color: red;"><strong>Hata:</strong> Sunucuya bağlanılamadı.</div>`;
+            }
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>

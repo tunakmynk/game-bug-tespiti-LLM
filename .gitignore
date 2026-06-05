@@ -1,0 +1,10 @@
+# Çevre değişkenleri (API anahtarları)
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Model ve veri dosyaları
+*.pkl
+*.csv
