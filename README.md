@@ -234,6 +234,13 @@ Bu proje aşamalı olarak geliştirilmiştir:
 7. **RAG Sistemi** — Trafik Polisi + Cevaplayıcı çift LLM mimarisi
 8. **Web Arayüzü** — Flask tabanlı gerçek zamanlı sohbet arayüzü
 
+
+## Görsel Arayüz
+
+<img width="1902" height="912" alt="Crimson Desert - Geliştirici QA Asistanı Arayüz Görünümü ve Gösterim" src="https://github.com/user-attachments/assets/0e7ab7c1-267b-4887-b80d-29d98766fcf8" />
+<img width="1896" height="907" alt="Crimson Desert - Geliştirici QA Asistanı Arayüz Görünümü ve Gösterim 2" src="https://github.com/user-attachments/assets/6744c166-aec8-4e96-9d35-1ea38ce00404" />
+
+
 ---
 
 ## 📄 Lisans
